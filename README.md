@@ -7,16 +7,16 @@ Stellar Compass is an intelligent DeFi portfolio manager that automatically dete
 ![Version](https://img.shields.io/badge/version-1.0.0-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-## 🚀 Features
+ Features
 
-### Core Functionality
-- **🔍 Idle Asset Detection** - Automatically scans for crypto sitting dormant for 30+ days
-- **📊 Smart Yield Matching** - Personalized recommendations based on your holdings
-- **🤖 AI Agent Monitoring** - 6 autonomous agents running 24/7
-- **🛡️ Risk Intelligence** - Protocol safety scores and risk assessment
-- **⚖️ Auto-Rebalancing** - Portfolio drift detection and optimization
-- **🌾 Yield Harvesting** - Tracks unclaimed rewards across protocols
-- **📱 Multi-Channel Alerts** - SMS, Email, and Push notifications
+Core Functionality
+- ** Idle Asset Detection** - Automatically scans for crypto sitting dormant for 30+ days
+- ** Smart Yield Matching** - Personalized recommendations based on your holdings
+- ** AI Agent Monitoring** - 6 autonomous agents running 24/7
+- ** Risk Intelligence** - Protocol safety scores and risk assessment
+- ** Auto-Rebalancing** - Portfolio drift detection and optimization
+- ** Yield Harvesting** - Tracks unclaimed rewards across protocols
+- ** Multi-Channel Alerts** - SMS, Email, and Push notifications
 
 ### AI Agents
 1. **Idle Asset Monitor** - Scans every 5 mins for dormant assets
@@ -26,7 +26,7 @@ Stellar Compass is an intelligent DeFi portfolio manager that automatically dete
 5. **Yield Harvester** - Tracks unclaimed rewards
 6. **Price Movement Agent** - Monitors significant price changes
 
-## 🏗️ Tech Stack
+##  Tech Stack
 
 ### Frontend
 - HTML5 / CSS3 / JavaScript
@@ -44,7 +44,7 @@ Stellar Compass is an intelligent DeFi portfolio manager that automatically dete
 - Horizon API
 - Freighter Wallet
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have:
 - **Python 3.9+** installed
@@ -52,7 +52,7 @@ Before you begin, ensure you have:
 - **Git** for version control
 - **Freighter Wallet** browser extension ([Install here](https://www.freighter.app/))
 
-## 🔧 Installation
+##  Installation
 
 ### 1. Clone the Repository
 
@@ -90,7 +90,7 @@ cd ../frontend
 # Just open index.html in a browser or use a local server
 ```
 
-## 🚀 Running the Application
+##  Running the Application
 
 ### Start Backend Server
 
