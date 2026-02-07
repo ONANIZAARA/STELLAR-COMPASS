@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stellar Compass - Universal DeFi Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .wallet-selector {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .wallet-selector h2 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .wallet-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .wallet-option {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            border-radius: 15px;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: 3px solid transparent;
+        }
+
+        .wallet-option:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+            border-color: #ffd700;
+        }
+
+        .wallet-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background: #ccc;
+        }
+
+        .wallet-option.disabled:hover {
+            transform: none;
+            box-shadow: none;
+        }
+
+        .wallet-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+
+        .wallet-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .wallet-status {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .manual-input {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 10px;
+            display: none;
+        }
+
+        .manual-input.active {
+            display: block;
+        }
+
+        .manual-input input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .manual-input button {
+            width: 100%;
+            padding: 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .manual-input button:hover {
+            background: #5568d3;
+        }
+
+        .dashboard {
+            display: none;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .connection-info {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .connection-details {
+            flex: 1;
+        }
+
+        .wallet-badge {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+        }
+
+        .disconnect-btn {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .disconnect-btn:hover {
+            background: white;
+            color: #667eea;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .assets-section, .opportunities-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .asset-card, .opportunity-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #c62828;
+        }
+
+        .success {
+            background: #e8f5e9;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #2e7d32;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .wallet-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>🌟 Stellar Compass</h1>
+            <p>Your Universal DeFi Assistant on Stellar</p>
+        </div>
+
+        <!-- Wallet Selector -->
+        <div id="walletSelector" class="wallet-selector">
+            <h2>Connect Your Wallet</h2>
+            <p style="text-align: center; color: #666; margin-bottom: 20px;">
+                Choose from any of these Stellar wallets or connect manually
+            </p>
+
+            <div class="wallet-grid">
+                <div class="wallet-option" id="freighterOption" onclick="connectWallet('freighter')">
+                    <div class="wallet-icon">🚀</div>
+                    <div class="wallet-name">Freighter</div>
+                    <div class="wallet-status" id="freighterStatus">Browser Extension</div>
+                </div>
+
+                <div class="wallet-option" id="rabetOption" onclick="connectWallet('rabet')">
+                    <div class="wallet-icon">🐰</div>
+                    <div class="wallet-name">Rabet</div>
+                    <div class="wallet-status" id="rabetStatus">Browser Extension</div>
+                </div>
+
+                <div class="wallet-option" id="xbullOption" onclick="connectWallet('xbull')">
+                    <div class="wallet-icon">🐂</div>
+                    <div class="wallet-name">xBull</div>
+                    <div class="wallet-status" id="xbullStatus">Browser Extension</div>
+                </div>
+
+                <div class="wallet-option" id="albedoOption" onclick="connectWallet('albedo')">
+                    <div class="wallet-icon">⭐</div>
+                    <div class="wallet-name">Albedo</div>
+                    <div class="wallet-status">Web-Based</div>
+                </div>
+
+                <div class="wallet-option" onclick="showManualInput()">
+                    <div class="wallet-icon">🦞</div>
+                    <div class="wallet-name">Lobstr / Other</div>
+                    <div class="wallet-status">Manual Entry</div>
+                </div>
+            </div>
+
+            <!-- Manual Input Section -->
+            <div id="manualInput" class="manual-input">
+                <h3 style="margin-bottom: 15px;">Enter Your Public Key</h3>
+                <p style="color: #666; margin-bottom: 15px; font-size: 0.9em;">
+                    For Lobstr, hardware wallets, or any Stellar wallet - just paste your public key
+                </p>
+                <input 
+                    type="text" 
+                    id="publicKeyInput" 
+                    placeholder="GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                    maxlength="56"
+                />
+                <button onclick="connectManual()">Connect</button>
+            </div>
+        </div>
+
+        <!-- Dashboard (Hidden by default) -->
+        <div id="dashboard" class="dashboard">
+            <!-- Connection Info -->
+            <div class="connection-info">
+                <div class="connection-details">
+                    <div class="wallet-badge" id="walletBadge">Connected</div>
+                    <div style="font-size: 1.2em; font-weight: bold;">
+                        <span id="publicKeyDisplay"></span>
+                    </div>
+                </div>
+                <button class="disconnect-btn" onclick="disconnectWallet()">Disconnect</button>
+            </div>
+
+            <!-- Messages -->
+            <div id="messageContainer"></div>
+
+            <!-- Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Portfolio Value</div>
+                    <div class="stat-value" id="totalValue">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Assets</div>
+                    <div class="stat-value" id="activeAssets">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Idle Assets</div>
+                    <div class="stat-value" id="idleAssets">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">DeFi Opportunities</div>
+                    <div class="stat-value" id="opportunities">0</div>
+                </div>
+            </div>
+
+            <!-- Assets Section -->
+            <div class="assets-section">
+                <h3 class="section-title">💼 Your Assets</h3>
+                <div id="assetsList"></div>
+            </div>
+
+            <!-- Opportunities Section -->
+            <div class="opportunities-section">
+                <h3 class="section-title">🚀 DeFi Opportunities</h3>
+                <div id="opportunitiesList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load Wallet Connector -->
+    <script src="wallet-connector.js"></script>
+    
+    <!-- Main App Script -->
+    <script src="app.js"></script>
+</body>
+</html>

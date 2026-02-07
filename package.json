@@ -1,0 +1,31 @@
+{
+  "name": "stellar-compass",
+  "version": "1.0.0",
+  "description": "AI-Powered DeFi Assistant for Stellar Network",
+  "main": "frontend/index.html",
+  "scripts": {
+    "start": "bash start.sh",
+    "start:windows": "start.bat",
+    "backend": "cd backend && python app.py",
+    "frontend": "cd frontend && python -m http.server 8080"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YOUR_USERNAME/stellar-compass.git"
+  },
+  "keywords": [
+    "stellar",
+    "defi",
+    "ai",
+    "blockchain",
+    "cryptocurrency",
+    "yield-farming",
+    "portfolio-management"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/YOUR_USERNAME/stellar-compass/issues"
+  },
+  "homepage": "https://github.com/YOUR_USERNAME/stellar-compass#readme"
+}

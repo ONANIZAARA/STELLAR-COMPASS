@@ -1,0 +1,31 @@
+# ===================================
+# STELLAR COMPASS CONFIGURATION
+# ===================================
+
+# Email Notifications (Gmail)
+# Get app password: https://myaccount.google.com/apppasswords
+EMAIL_ADDRESS=your-email@gmail.com
+EMAIL_PASSWORD=your-app-password-here
+USER_EMAIL=your-email@gmail.com
+
+# SMS Notifications (Twilio) - Optional
+# Sign up: https://www.twilio.com/try-twilio
+TWILIO_ACCOUNT_SID=your-twilio-account-sid
+TWILIO_AUTH_TOKEN=your-twilio-auth-token
+TWILIO_PHONE_NUMBER=+1234567890
+USER_PHONE=+1234567890
+
+# ===================================
+# INSTRUCTIONS:
+# ===================================
+# 1. Replace "your-email@gmail.com" with your actual Gmail address
+# 2. Get Gmail App Password:
+#    - Go to: https://myaccount.google.com/apppasswords
+#    - Select "Mail" and "Other (Custom name)"
+#    - Name it "Stellar Compass"
+#    - Copy the 16-character password (format: xxxx xxxx xxxx xxxx)
+# 3. For SMS (optional):
+#    - Sign up at https://www.twilio.com/try-twilio
+#    - Get $15 free credit
+#    - Copy Account SID, Auth Token, and phone number
+# 4. Save this file as ".env" in your backend folder
