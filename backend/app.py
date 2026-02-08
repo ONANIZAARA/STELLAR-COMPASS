@@ -1,9 +1,9 @@
 """
 Stellar Compass - Universal DeFi Assistant Backend
-Multi-Wallet Support with Email/SMS Notifications
+Serves both frontend and API endpoints
 """
 
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 from stellar_sdk import Server, Asset
 import os
@@ -11,12 +11,18 @@ from dotenv import load_dotenv
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from pathlib import Path
 
 # Load environment variables
 load_dotenv()
 
-# Initialize Flask app
-app = Flask(__name__)
+# Get the parent directory (project root)
+BASE_DIR = Path(__file__).parent.parent
+
+# Initialize Flask app with frontend folder
+app = Flask(__name__, 
+            static_folder=str(BASE_DIR / 'frontend'),
+            static_url_path='')
 CORS(app)
 
 # Stellar network configuration
@@ -41,8 +47,32 @@ print("\n🔔 Notifications Status:")
 print(f"   📧 Email: {'✅ Enabled' if EMAIL_ADDRESS and EMAIL_PASSWORD else '❌ Not configured'}")
 print(f"   📱 SMS: {'✅ Enabled' if TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN else '❌ Not configured'}")
 print(f"\n💡 Connected to Stellar {HORIZON_URL}")
+print(f"📁 Serving frontend from: {BASE_DIR / 'frontend'}")
 print("-" * 50)
 
+
+# ============================================
+# FRONTEND SERVING ROUTES
+# ============================================
+
+@app.route('/')
+def index():
+    """Serve the main frontend page"""
+    return send_from_directory(str(BASE_DIR / 'frontend'), 'index.html')
+
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static frontend files"""
+    try:
+        return send_from_directory(str(BASE_DIR / 'frontend'), path)
+    except:
+        # If file not found, return index.html (for SPA routing)
+        return send_from_directory(str(BASE_DIR / 'frontend'), 'index.html')
+
+
+# ============================================
+# HELPER FUNCTIONS
+# ============================================
 
 def send_email(subject, body_html):
     """Send email notification"""
@@ -99,6 +129,11 @@ def send_sms(message):
         return False
 
 
+# ============================================
+# API ENDPOINTS
+# ============================================
+
+@app.route('/api/health', methods=['GET'])
 @app.route('/health', methods=['GET'])
 def health_check():
     """Health check endpoint"""
@@ -109,6 +144,7 @@ def health_check():
     })
 
 
+@app.route('/api/notify-connection', methods=['POST'])
 @app.route('/notify-connection', methods=['POST'])
 def notify_connection():
     """Send notification when wallet connects"""
@@ -183,6 +219,7 @@ def notify_connection():
         }), 500
 
 
+@app.route('/api/portfolio/<public_key>', methods=['GET'])
 @app.route('/portfolio/<public_key>', methods=['GET'])
 def get_portfolio(public_key):
     """Get portfolio for a Stellar account"""
@@ -299,6 +336,7 @@ def send_portfolio_notification(public_key, portfolio):
         print(f"⚠️  Portfolio notification failed: {str(e)}")
 
 
+@app.route('/api/opportunities/<public_key>', methods=['GET'])
 @app.route('/opportunities/<public_key>', methods=['GET'])
 def get_opportunities(public_key):
     """Get DeFi opportunities for account"""
@@ -396,6 +434,7 @@ def send_opportunities_notification(public_key, opportunities):
         print(f"⚠️  Opportunities notification failed: {str(e)}")
 
 
+@app.route('/api/test-notification', methods=['GET'])
 @app.route('/test-notification', methods=['GET'])
 def test_notification():
     """Test endpoint to verify notifications work"""

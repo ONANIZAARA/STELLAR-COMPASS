@@ -1,95 +1,285 @@
-// Stellar Compass - Frontend JavaScript with Lobstr Support
+// Stellar Compass - Multi-Wallet Support
 console.log('🚀 Stellar Compass Initializing...');
 
 let connectedAccount = null;
-let walletConnectSession = null;
+let connectedWallet = null;
 
-// WalletConnect configuration
-const WALLETCONNECT_PROJECT_ID = 'YOUR_PROJECT_ID'; // You'll need to get this from https://cloud.walletconnect.com
+// Toggle hamburger menu
+function toggleMenu() {
+    const menu = document.getElementById('wallet-menu');
+    menu.classList.toggle('hidden');
+    
+    // Close menu when clicking outside
+    if (!menu.classList.contains('hidden')) {
+        setTimeout(() => {
+            document.addEventListener('click', closeMenuOutside);
+        }, 100);
+    }
+}
 
-// Connect to Lobstr wallet via WalletConnect
-async function connectWallet() {
-    console.log('🔗 Connecting to Lobstr wallet...');
+function closeMenuOutside(event) {
+    const menu = document.getElementById('wallet-menu');
+    const menuBtn = document.getElementById('menu-btn');
+    const connectBtn = document.getElementById('connect-btn');
+    
+    if (!menu.contains(event.target) && 
+        event.target !== menuBtn && 
+        event.target !== connectBtn &&
+        !menuBtn.contains(event.target) &&
+        !connectBtn.contains(event.target)) {
+        menu.classList.add('hidden');
+        document.removeEventListener('click', closeMenuOutside);
+    }
+}
+
+// Connect to Freighter wallet
+async function connectFreighter() {
+    console.log('🚀 Connecting to Freighter...');
+    toggleMenu();
+    
+    if (typeof window.freighterApi === 'undefined') {
+        showError('Freighter not installed. Please install from freighter.app');
+        return;
+    }
     
     try {
-        // For Lobstr, we'll use a simpler approach with manual address input
-        // Or you can integrate WalletConnect for full functionality
+        const publicKey = await window.freighterApi.getPublicKey();
+        await finalizeConnection(publicKey, 'Freighter', '🚀');
+    } catch (error) {
+        console.error('❌ Freighter error:', error);
+        showError('Failed to connect Freighter. Please approve the connection.');
+    }
+}
+
+// Connect to Rabet wallet
+async function connectRabet() {
+    console.log('🐰 Connecting to Rabet...');
+    toggleMenu();
+    
+    if (typeof window.rabet === 'undefined') {
+        showError('Rabet not installed. Please install Rabet extension.');
+        return;
+    }
+    
+    try {
+        await window.rabet.connect();
+        const publicKey = await window.rabet.getPublicKey();
+        await finalizeConnection(publicKey, 'Rabet', '🐰');
+    } catch (error) {
+        console.error('❌ Rabet error:', error);
+        showError('Failed to connect Rabet. Please approve the connection.');
+    }
+}
+
+// Connect to xBull wallet
+async function connectXBull() {
+    console.log('🐂 Connecting to xBull...');
+    toggleMenu();
+    
+    if (typeof window.xBullSDK === 'undefined') {
+        showError('xBull not installed. Please install xBull extension.');
+        return;
+    }
+    
+    try {
+        const publicKey = await window.xBullSDK.connect();
+        await finalizeConnection(publicKey, 'xBull', '🐂');
+    } catch (error) {
+        console.error('❌ xBull error:', error);
+        showError('Failed to connect xBull. Please approve the connection.');
+    }
+}
+
+// Connect to Albedo wallet
+async function connectAlbedo() {
+    console.log('⭐ Connecting to Albedo...');
+    toggleMenu();
+    
+    try {
+        // Albedo uses a different flow - typically opens a new window
+        if (typeof window.albedo === 'undefined') {
+            // Load Albedo SDK dynamically
+            showError('Albedo integration coming soon. Use manual entry for now.');
+            return;
+        }
         
-        // Show modal for wallet address input
-        const modal = document.createElement('div');
-        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        modal.innerHTML = `
-            <div class="bg-white rounded-lg p-8 max-w-md w-full mx-4">
-                <h3 class="text-2xl font-bold mb-4">Connect Lobstr Wallet</h3>
-                <p class="text-gray-600 mb-4">Enter your Stellar public address from Lobstr wallet:</p>
+        const result = await window.albedo.publicKey();
+        await finalizeConnection(result.pubkey, 'Albedo', '⭐');
+    } catch (error) {
+        console.error('❌ Albedo error:', error);
+        showError('Failed to connect Albedo.');
+    }
+}
+
+// Connect manually (Lobstr / Other wallets)
+async function connectManual(walletType = 'Custom') {
+    console.log(`🔑 Manual ${walletType} wallet connection...`);
+    toggleMenu();
+    
+    // Wallet-specific instructions
+    const walletInstructions = {
+        'Lobstr': {
+            icon: '🦞',
+            name: 'Lobstr Wallet',
+            steps: [
+                'Open the Lobstr app on your phone',
+                'Tap on Settings (⚙️)',
+                'Select "Account Details"',
+                'Copy your Public Key (starts with "G")'
+            ]
+        },
+        'Custom': {
+            icon: '🔑',
+            name: 'Custom Wallet',
+            steps: [
+                'Open your Stellar wallet app or website',
+                'Find your account settings or profile',
+                'Look for "Public Key", "Public Address", or "Account ID"',
+                'Copy the address (56 characters starting with "G")'
+            ]
+        }
+    };
+    
+    const wallet = walletInstructions[walletType] || walletInstructions['Custom'];
+    
+    // Show modal for wallet address input
+    const modal = document.createElement('div');
+    modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4';
+    modal.innerHTML = `
+        <div class="bg-white rounded-lg max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <!-- Header -->
+            <div class="sticky top-0 bg-gradient-to-r from-purple-600 to-blue-600 text-white p-6 rounded-t-lg">
+                <div class="flex justify-between items-center">
+                    <div class="flex items-center space-x-3">
+                        <span class="text-4xl">${wallet.icon}</span>
+                        <div>
+                            <h3 class="text-2xl font-bold">Connect ${wallet.name}</h3>
+                            <p class="text-sm opacity-90">Enter your Stellar address</p>
+                        </div>
+                    </div>
+                    <button onclick="this.closest('.fixed').remove()" class="text-white hover:bg-white hover:bg-opacity-20 rounded-full p-2 transition">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="p-6">
+                <!-- Instructions -->
+                <div class="bg-blue-50 border-l-4 border-blue-500 rounded-lg p-4 mb-4">
+                    <h4 class="font-bold text-blue-900 mb-2 flex items-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        How to find your public key:
+                    </h4>
+                    <ol class="text-sm text-blue-800 space-y-2 ml-6">
+                        ${wallet.steps.map((step, i) => `<li class="list-decimal">${step}</li>`).join('')}
+                    </ol>
+                </div>
+
+                <!-- Input Field -->
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    Stellar Public Key
+                </label>
                 <input 
                     type="text" 
                     id="wallet-address-input" 
                     placeholder="GXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
-                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-2 mb-4 font-mono text-sm"
+                    class="w-full border-2 border-gray-300 rounded-lg px-4 py-3 mb-2 font-mono text-sm focus:border-purple-500 focus:outline-none focus:ring-2 focus:ring-purple-200 transition"
                 />
-                <div class="text-xs text-gray-500 mb-4">
-                    📱 Open Lobstr app → Settings → Account Details → Copy your Public Key
+                <p class="text-xs text-gray-500 mb-4">
+                    ✓ Must be 56 characters long and start with "G"
+                </p>
+
+                <!-- Common Wallets Info (for Custom only) -->
+                ${walletType === 'Custom' ? `
+                <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                    <p class="text-xs font-semibold text-gray-700 mb-2">📱 Supported Stellar Wallets:</p>
+                    <div class="grid grid-cols-2 gap-2 text-xs text-gray-600">
+                        <div>• Lobstr</div>
+                        <div>• Solar Wallet</div>
+                        <div>• StellarTerm</div>
+                        <div>• StellarX</div>
+                        <div>• Ledger</div>
+                        <div>• Trezor</div>
+                        <div>• Paper Wallet</div>
+                        <div>• Any other wallet</div>
+                    </div>
                 </div>
+                ` : ''}
+
+                <!-- Buttons -->
                 <div class="flex space-x-3">
                     <button 
-                        onclick="cancelConnection()" 
-                        class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition">
+                        onclick="this.closest('.fixed').remove()" 
+                        class="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg hover:bg-gray-300 transition font-semibold">
                         Cancel
                     </button>
                     <button 
-                        onclick="confirmConnection()" 
-                        class="flex-1 bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700 transition">
-                        Connect
+                        onclick="confirmManualConnection('${walletType}')" 
+                        class="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 text-white py-3 rounded-lg hover:from-purple-700 hover:to-blue-700 transition font-semibold shadow-lg">
+                        Connect Wallet
                     </button>
                 </div>
             </div>
-        `;
-        
-        document.body.appendChild(modal);
-        
-        // Focus on input
-        setTimeout(() => {
-            document.getElementById('wallet-address-input').focus();
-        }, 100);
-        
-    } catch (error) {
-        console.error('❌ Error connecting wallet:', error);
-        showError('Failed to connect wallet.');
-    }
+        </div>
+    `;
+    
+    document.body.appendChild(modal);
+    
+    // Focus on input
+    setTimeout(() => {
+        document.getElementById('wallet-address-input').focus();
+    }, 100);
 }
 
-// Confirm wallet connection
-async function confirmConnection() {
+// Confirm manual wallet connection
+async function confirmManualConnection(walletType = 'Custom') {
     const input = document.getElementById('wallet-address-input');
     const publicKey = input.value.trim();
     
     // Validate Stellar address
     if (!publicKey || publicKey.length !== 56 || !publicKey.startsWith('G')) {
-        showError('Invalid Stellar address. Please check and try again.');
+        showError('Invalid Stellar address. Must be 56 characters starting with "G".');
+        input.classList.remove('border-gray-300');
         input.classList.add('border-red-500');
+        input.focus();
         return;
     }
-    
-    console.log('✅ Wallet address entered:', publicKey);
-    
-    connectedAccount = publicKey;
     
     // Remove modal
     const modal = document.querySelector('.fixed.inset-0');
     if (modal) modal.remove();
     
+    const walletName = walletType === 'Custom' ? 'Custom Wallet' : walletType;
+    const walletIcon = walletType === 'Lobstr' ? '🦞' : '🔑';
+    
+    await finalizeConnection(publicKey, walletName, walletIcon);
+}
+
+// Finalize connection for any wallet
+async function finalizeConnection(publicKey, walletName, walletIcon) {
+    console.log(`✅ ${walletName} connected:`, publicKey);
+    
+    connectedAccount = publicKey;
+    connectedWallet = walletName;
+    
     // Update UI
     document.getElementById('wallet-address').textContent = 
         `${publicKey.substring(0, 8)}...${publicKey.substring(publicKey.length - 8)}`;
+    document.getElementById('wallet-icon').textContent = walletIcon;
     document.getElementById('connect-btn').style.display = 'none';
+    document.getElementById('menu-btn').classList.remove('hidden');
     document.getElementById('wallet-info').classList.remove('hidden');
     document.getElementById('get-started').style.display = 'none';
     document.getElementById('dashboard').classList.remove('hidden');
     
-    showSuccess('🎉 Lobstr wallet connected! Sending notification...');
+    showSuccess(`🎉 ${walletName} connected! Sending notification...`);
     
-    // Notify backend that wallet is connected (triggers email/SMS)
+    // Notify backend (triggers email/SMS)
     try {
         const notifyResponse = await fetch('http://localhost:5000/api/wallet/connected', {
             method: 'POST',
@@ -97,7 +287,8 @@ async function confirmConnection() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                public_key: publicKey
+                public_key: publicKey,
+                wallet_type: walletName
             })
         });
         
@@ -109,15 +300,9 @@ async function confirmConnection() {
         console.warn('⚠️ Could not send notification:', error);
     }
     
-    // Load portfolio and opportunities (also triggers notifications)
+    // Load portfolio and opportunities
     await loadPortfolio();
     await loadOpportunities();
-}
-
-// Cancel connection
-function cancelConnection() {
-    const modal = document.querySelector('.fixed.inset-0');
-    if (modal) modal.remove();
 }
 
 // Load portfolio data
@@ -147,7 +332,7 @@ async function loadPortfolio() {
                 <div class="text-center py-8">
                     <p class="text-2xl mb-2">🪙</p>
                     <p class="text-gray-500">No assets found.</p>
-                    <p class="text-sm text-gray-400 mt-2">Fund your Lobstr wallet to get started!</p>
+                    <p class="text-sm text-gray-400 mt-2">Fund your wallet to get started!</p>
                 </div>
             `;
         } else {
@@ -250,7 +435,9 @@ function disconnectWallet() {
     console.log('🔌 Disconnecting wallet...');
     
     connectedAccount = null;
+    connectedWallet = null;
     document.getElementById('connect-btn').style.display = 'block';
+    document.getElementById('menu-btn').classList.add('hidden');
     document.getElementById('wallet-info').classList.add('hidden');
     document.getElementById('get-started').style.display = 'block';
     document.getElementById('dashboard').classList.add('hidden');
@@ -274,7 +461,7 @@ function showError(message) {
 
 function showNotification(message, type) {
     const notification = document.createElement('div');
-    notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-2xl z-50 max-w-md animate-fade-in ${
+    notification.className = `fixed top-4 right-4 px-6 py-4 rounded-lg shadow-2xl z-50 max-w-md ${
         type === 'success' ? 'bg-green-500' : 'bg-red-500'
     } text-white`;
     notification.innerHTML = `
@@ -296,7 +483,7 @@ function showNotification(message, type) {
 
 // Initialize on page load
 window.addEventListener('load', async () => {
-    console.log('🌟 Stellar Compass loaded with Lobstr support!');
+    console.log('🌟 Stellar Compass loaded - Multi-Wallet Support!');
     
     // Check backend connection
     try {
