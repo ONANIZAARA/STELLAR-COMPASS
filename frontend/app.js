@@ -281,17 +281,18 @@ async function finalizeConnection(publicKey, walletName, walletIcon) {
     
     // Notify backend (triggers email/SMS)
     try {
-        const notifyResponse = await fetch('http://localhost:5000/api/wallet/connected', {
+        // Backend expects `/api/notify-connection` and JSON keys `publicKey` / `walletType`
+        const notifyResponse = await fetch('http://localhost:5000/api/notify-connection', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                public_key: publicKey,
-                wallet_type: walletName
+                publicKey: publicKey,
+                walletType: walletName
             })
         });
-        
+
         if (notifyResponse.ok) {
             console.log('✅ Notification sent');
             showSuccess('📧 Check your email for wallet connection confirmation!');
@@ -314,20 +315,22 @@ async function loadPortfolio() {
     try {
         const response = await fetch(`http://localhost:5000/api/portfolio/${connectedAccount}`);
         const data = await response.json();
-        
+
         console.log('✅ Portfolio loaded:', data);
-        
+
+        // Backend returns `balances` (not `assets`) and provides `total_value`, `idle_assets` etc.
+        const balances = data.balances || [];
+
         // Update portfolio display
-        document.getElementById('total-value').textContent = 
-            `$${data.total_value.toFixed(2)}`;
-        document.getElementById('asset-count').textContent = data.assets.length;
-        document.getElementById('idle-count').textContent = data.idle_assets.length;
-        
+        document.getElementById('total-value').textContent = `$${(data.total_value || 0).toFixed(2)}`;
+        document.getElementById('asset-count').textContent = balances.length;
+        document.getElementById('idle-count').textContent = (data.idle_assets || []).length;
+
         // Display assets
         const assetsList = document.getElementById('assets-list');
         assetsList.innerHTML = '';
-        
-        if (data.assets.length === 0) {
+
+        if (balances.length === 0) {
             assetsList.innerHTML = `
                 <div class="text-center py-8">
                     <p class="text-2xl mb-2">🪙</p>
@@ -336,17 +339,21 @@ async function loadPortfolio() {
                 </div>
             `;
         } else {
-            data.assets.forEach(asset => {
+            balances.forEach(balance => {
+                const assetCode = balance.asset_code || 'XLM';
+                const bal = parseFloat(balance.balance) || 0;
+                const val = parseFloat(balance.value) || 0;
+
                 const assetDiv = document.createElement('div');
                 assetDiv.className = 'p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition';
                 assetDiv.innerHTML = `
                     <div class="flex justify-between items-center">
                         <div>
-                            <span class="font-bold text-lg">${asset.asset}</span>
-                            <p class="text-sm text-gray-600">${asset.balance.toFixed(4)}</p>
+                            <span class="font-bold text-lg">${assetCode}</span>
+                            <p class="text-sm text-gray-600">${bal.toFixed(4)}</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-semibold text-purple-600">$${asset.value.toFixed(2)}</p>
+                            <p class="font-semibold text-purple-600">$${val.toFixed(2)}</p>
                         </div>
                     </div>
                 `;
@@ -370,13 +377,14 @@ async function loadOpportunities() {
     
     try {
         const response = await fetch(`http://localhost:5000/api/opportunities/${connectedAccount}`);
-        const opportunities = await response.json();
-        
+        const result = await response.json();
+        const opportunities = result.opportunities || [];
+
         console.log('✅ Opportunities loaded:', opportunities);
-        
+
         const oppList = document.getElementById('opportunities-list');
         oppList.innerHTML = '';
-        
+
         if (opportunities.length === 0) {
             oppList.innerHTML = `
                 <div class="text-center py-8">
